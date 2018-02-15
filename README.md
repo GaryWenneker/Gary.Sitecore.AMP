@@ -1,4 +1,4 @@
-![](https://mischacommunications.com/wp-content/uploads/2017/10/labimg_640_amp.jpg" width="200)
+![](https://mischacommunications.com/wp-content/uploads/2017/10/labimg_640_amp.jpg)
 
 Gary’s Sitecore AMP
 ===================
