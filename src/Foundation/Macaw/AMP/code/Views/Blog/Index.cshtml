@@ -1,0 +1,31 @@
+﻿@using Foundation.Macaw.AMP.Models
+@{
+    Layout = null;
+}
+@model BlogPost
+
+Strakke shit op: @ViewBag.mylayout
+
+<div class="featuredContainer">
+    <article id="postMain" class="post tag-sitecore tag-sxa tag-react tag-mvc">
+        <div class="heroImage  showHeroImage" style="background-image: url(/content/images/2018/01/sxa.png) ">
+
+            <div class="tagShare">
+                <div class="tags"><a href="/tag/sitecore/">Sitecore</a>, <a href="/tag/sxa/">SXA</a>, <a href="/tag/react/">React</a>, <a href="/tag/mvc/">MVC</a></div>
+                <div class="shareIcon icon-share"><!-- --></div>
+            </div>
+        </div>
+        <section class="postContent singleColumn">
+            <h1 class="postTitle">DEMO</h1>
+            <time class="dateStamp" datetime="2018-01-04">
+                <span>&mdash;&ensp;</span>
+                <i>Published 04 Jan by <a href="/author/gary/">Gary Wenneker</a></i>
+                <span>&ensp;&mdash;</span>
+            </time>
+            <div class="singleColumn"></div>
+
+            @Html.Raw(Model.Content)
+
+        </section>
+    </article>
+</div>
