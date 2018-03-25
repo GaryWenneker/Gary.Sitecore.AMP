@@ -1,0 +1,225 @@
+﻿---
+ID: "682f400c-a9e8-48ac-867a-d87deb2cd80e"
+Parent: "110d559f-dea5-42ea-9c1c-8a5df7e70ef9"
+Template: "23782417-dd24-412d-a203-3013390e8390"
+Path: /sitecore/content/Home/Amplify
+DB: master
+SharedFields:
+- ID: "f1a1fe9e-a60c-4ddb-a3a0-bb5b29fe732e"
+  Hint: __Renderings
+  Type: layout
+  Value: |
+    <r xmlns:p="p" xmlns:s="s"
+      p:p="1">
+      <d
+        id="{1972B483-1470-4AE8-AE58-85C618A7DE2C}"
+        p:after="*[1=2]"
+        s:l="{F01F14EE-711C-47E5-B6F9-513ECEDE5B6A}" />
+    </r>
+Languages:
+- Language: en
+  Versions:
+  - Version: 1
+    Fields:
+    - ID: "04bf00db-f5fb-41f7-8ab7-22408372a981"
+      Hint: __Final Renderings
+      Type: Layout
+      Value: |
+        <r xmlns:p="p" xmlns:s="s"
+          p:p="1">
+          <d
+            id="{FE5D7FDF-89C0-4D99-9AA3-B5FBD009C9F3}">
+            <r
+              uid="{4336A77D-AF64-4574-9428-7CD8ABFD604A}"
+              s:ds="{682F400C-A9E8-48AC-867A-D87DEB2CD80E}"
+              s:id="{59BBB4F6-66C0-4421-BDF3-7F3F4DF6D846}"
+              s:par=""
+              s:ph="blog-content" />
+          </d>
+          <d
+            id="{1972B483-1470-4AE8-AE58-85C618A7DE2C}">
+            <r
+              uid="{2981E0AA-167C-4F49-817F-3D8F8B9A4FE2}"
+              s:ds=""
+              s:id="{59BBB4F6-66C0-4421-BDF3-7F3F4DF6D846}"
+              s:par=""
+              s:ph="blog-content" />
+          </d>
+        </r>
+    - ID: "25bed78c-4957-4165-998a-ca1b52f67497"
+      Hint: __Created
+      Value: 20180227T102324Z
+    - ID: "34fc8d96-ee36-405a-b1bf-173413b4094c"
+      Hint: Keywords
+      Value: sitecore
+    - ID: "aff84eb0-dc72-4fe1-8fa3-ef5782dfa4d9"
+      Hint: Content
+      Value: |
+        ![](https://gary.wenneker.org/content/images/2018/03/cover.jpg)
+        
+        So, the customer wants to have some pages in AMP I heard a colleague say. Amp? What's that? Never heard of that. I opened op my digital bible Google and started to search.
+        
+        ## What is AMP?
+        
+        > AMP or [Accelerated Mobile Pages](https://www.ampproject.org/learn/overview/) is Google's CDN where your indexed mobile pages are served to mobile pages
+        
+        This means that the AMP version of your page gets indexed. When someone with a mobile device searches on Google and clicks on the link rather than going to your website the cached version of that page is served: the AMP page. It's a CDN of your mobile pages and entirely free. You even get a boost on the search results ranking as a bonus if you use AMP.
+        
+        ## The foundation of AMP
+        AMP is based on three components
+        
+        * **AMP HTML** - is HTML with some restrictions for reliable performance
+        * **AMP JS** - ensures the fast rendering of AMP HTML pages
+        * **AMP CDN** - can be used to serve cached AMP HTML pages
+        
+        And so, for every page in your website you should have an AMP page!
+        
+        ![](https://i.giphy.com/f2jS9VckmTzQQ.gif)
+        
+        ## Sitecore to the rescue!
+        
+        I guess we're not monks from the middle ages. We do not want to manually create an AMP page for every page our website. I think it would be nice to have every page in your site to have an AMP equivalent and have the possibility to override the setting and have a custom designed AMP page. 
+        
+        ## Creating AMP pages in Sitecore
+        My own blog has a setting which allows to output every page also as an AMP page and that was the starting point for me to work out this piece of code wich you can also use in your Sitecore environment.
+        
+        ### From AMP to Sitecore
+        Without showing some content the AMP page will not show correctly. This is why I'll be using my blog post as the example for this post as well. For this I added a gimmick: a markdown parser. The Sitecore item will hold the raw markdown markup and my controller will transform it into plain HTML.
+        
+        ### AMP Pipeline
+        For my blog I use [Ghost](https://ghost.org/). It's lightweight and you can deploy and use it on [Azure](https://azure.microsoft.com) and without a domain and SSL it's fully free. It holds a setting for AMP. Turn the setting on and you're done:
+        
+        ![](https://gary.wenneker.org/content/images/2018/03/2018-03-25_0921.png)
+        
+        What it does is adding some functionality that when you add `/amp` in the page url it serves the AMP variant. The way I want to work with such a process can only be done by a pipeline in Sitecore.
+        
+        Actually we should have two pipelines, one for the transformation and parsing of the url and one for serving the AMP payout page.
+        
+        #### PreprocessRequest Pipeline
+        This pipeline is based on the PreprocessRequest pipeline. This one is executed very early in the initialization of the page. During this stage the sessions object of the HTML context has a null value which forces us to use a different approach. We can do this either by adding a query string parameter or set a cookie. My opinion is the usage of a query string parameter is ugly. We should do this in a later process to make the LayoutResolver Pipeline aware that we are in AMP mode. For this pipeline I created three extension methods:
+        
+        * **SetAmpCookie(bool)** - Sets a cookie for future usage. If the paramater is set to true it will expire the cookie. 
+        * **UseAMP()** - Checks if the URL's path ends with /amp
+        * **RewriteUrl()** - For internal use but it will strip the /amp
+        
+        ```language-javascript
+        public class CheckAmpUrl: PreprocessRequestProcessor
+            {
+                /// <summary>
+                /// Adds a session variable when using AMP and removes the token when not
+                /// </summary>
+                /// <param name="args">the PreprocessRequestArgs</param>
+                public override void Process(PreprocessRequestArgs args)
+                {
+                    Assert.ArgumentNotNull((object)args, nameof(args));
+        
+                    // remove initial check (expired = true)
+                    args.HttpContext.SetAmpCookie(true);
+        
+                    // check if the url is requested with the /amp postfix
+                    if (args.HttpContext.UseAmp())
+                    {
+                        // set cookie for future usage
+                        args.HttpContext.SetAmpCookie();
+                        //  rewrite url to get original item
+                        args.HttpContext.RewriteUrl();
+                    }
+                }
+            }
+        ```
+        
+        #### LayoutResolver Pipeline
+        This pipeline checks if the AMP cookie is set and if so it will set the AMP device channel.
+        
+        ### AMP Device channel
+        The AMP device channel is just a a device. Nothing is added to it, no browser engine, no query string value, no rule. And yes we can use the querystring, but, *I'm more stubborn than a donkey* :-) The query string version renders my code useless but reason to show this is to demonstrate both ways of getting the job done.
+        
+        ![](/content/images/2018/03/2018-03-25_1001.png)
+        
+        This will only be the area where we set the layout for the AMP page.
+        
+        ```language-javascript
+        public override void Process(HttpRequestArgs args)
+                {
+        
+                    Assert.ArgumentNotNull(args, "args");
+        
+        
+                    // Get the default device
+                    HttpRequestBase request = args.HttpContext.Request;
+                    if (ExtensionMethods.GetAmpCookie(request))
+                    {
+                        SetAmp();
+                    }
+                }
+        
+                
+                private void SetAmp()
+                {
+                    DeviceRecords devices = Sitecore.Context.Item?.Database.Resources.Devices;
+                    if (devices != null)
+                    {
+                        DeviceItem defaultDevice = devices?.GetAll()?.Where(d => d.Name.ToLower() == "amp").FirstOrDefault();
+                        if (defaultDevice != null)
+                        {
+                            Sitecore.Context.Device = defaultDevice;
+                        }
+                    }
+                }
+        ```
+        
+        ![](/content/images/2018/03/2018-03-25_0952.png)
+        
+        ### From the page to the AMP page
+        Google does not like it when you have the same contents on more than one page. First you need to add a canonical url on your page. Then you should have the `amphtml` link pointed to your AMP page. 
+        
+        The markup of an AMP page also is slightly different from a normal web page. The total setup of a page is different so you have to take into account that tags are different too. The `img` tag in AMP is `amp-img` which forces us to rewrite some of the tags. In my source code project I'm providing with this post I use the HTML Agility Pack to do so. Feel free to adapt it to your needs. 
+        
+        The following code will 
+        
+        * get data from the Sitecore item
+        * transform the markdown to HTML
+        * if the page is an AMP page it will update the image tags
+        * returns the view based on the selected device
+        
+        ```language-javascript
+        public ActionResult Index()
+                {
+        
+                    var item = Sitecore.Context.Item;
+                    string md  = item.Fields["Content"].Value;
+        
+                    // Create new markdown instance
+                    Markdown mark = new Markdown();
+        
+                    // Run parser
+                    string text = mark.Transform(md);
+        
+                    if (HttpContext.UseAmp())
+                        text = UpdateAmpImages(text);
+        
+                    return View(new Models.BlogPost() { Content = text });
+                }
+        ```
+        
+        ### The result
+        Chrome has a nice [plugin](https://chrome.google.com/webstore/detail/amp-validator/nmoffdblmcmgeicmolmhobpoocbbmknc) you can use to validate your AMP markup. When you do it right the icon will turn green 
+        
+        ![](/content/images/2018/03/2018-03-25_1046.png)
+        
+        And eventually you will see your AMP page!
+        
+        ![](http://)
+        
+        ![](/content/images/2018/03/2018-03-25_1008.png)
+        
+        ### Sitecore's AMP solution on Github
+        The entire solution with serialized items (Unicorn) is available on my [Github page](https://github.com/GaryWenneker/Gary.Sitecore.AMP).
+        
+        So get your ass overthere and start amplifying your site!
+        
+        ![](https://i.giphy.com/SwT2Pk15RH5m.gif)
+    - ID: "f7816f2f-89dc-411f-bdb5-5c334793ba72"
+      Hint: Tags
+      Type: Multilist
+      Value: gary
