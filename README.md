@@ -3,7 +3,6 @@
 Gary’s Sitecore AMP
 ===================
 
-## soon to come
 
 This is a sample module which can be used in Sitecore 9.0.1. It is fully build
 on the Helix Principles with a little Gary Flavour.
