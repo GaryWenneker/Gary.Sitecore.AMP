@@ -1,0 +1,21 @@
+﻿@using Foundation.Macaw.AMP.Models
+@{
+    Layout = null;
+}
+@model BlogPost
+
+
+<div class="featuredContainer">
+    <article id="postMain" class="post tag-sitecore tag-sxa tag-react tag-mvc">
+        <div class="heroImage  showHeroImage">
+
+        </div>
+        <section class="postContent singleColumn">
+
+            <div class="singleColumn"></div>
+
+            @Html.Raw(Model.Content)
+
+        </section>
+    </article>
+</div>
