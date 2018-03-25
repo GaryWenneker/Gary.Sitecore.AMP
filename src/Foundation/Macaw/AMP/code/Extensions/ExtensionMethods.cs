@@ -7,6 +7,7 @@ using System.Web.Mvc;
 using System.Web.Routing;
 using Sitecore;
 using Sitecore.Data.Items;
+using Sitecore.Diagnostics;
 
 namespace Foundation.Macaw.AMP.Extensions
 {
@@ -51,6 +52,68 @@ namespace Foundation.Macaw.AMP.Extensions
         {
             string presentationItemPath = "/sitecore/layout/Layouts/AMP/AMP";
             return Context.Database?.GetItem(presentationItemPath);
+        }
+
+        /// <summary>The use rewrite for AMP.</summary>
+        /// <param name="context">The context.</param>
+        /// <returns>The use rewrite for AMP.</returns>
+        public static bool UseAmp(this HttpContextBase context)
+        {
+            Assert.ArgumentNotNull((object)context, nameof(context));
+
+            HttpRequestBase request = context.Request;
+            string filePath = request.FilePath;
+
+            filePath = filePath.TrimEnd('/');
+            string pattern = @"(/)";
+            var last = Regex.Split(filePath, pattern);
+            var result = last.GetUpperBound(0);
+
+            return last[last.GetUpperBound(0)].Equals("amp", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool UseAmp(string filePath)
+        {
+            filePath = filePath.TrimEnd('/');
+            string pattern = @"(/)";
+            var last = Regex.Split(filePath, pattern);
+            var result = last.GetUpperBound(0);
+
+            return last[last.GetUpperBound(0)].Equals("amp", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static void SetAmpCookie(this HttpContextBase context, bool expires = false)
+        {
+            if(expires)
+                context.Request.Cookies.Remove("AMP");
+            else
+            {
+                HttpCookie ampCookie = new HttpCookie("AMP");
+                ampCookie["Font"] = "Arial";
+                ampCookie["Color"] = "Blue";
+                ampCookie.Expires = DateTime.Now.AddDays(1d);
+                context.Response.Cookies.Add(ampCookie);
+            }
+        }
+
+        public static bool GetAmpCookie(this HttpRequestBase request)
+        {
+            return request.Cookies["AMP"] != null;
+        }
+
+        /// <summary>Rewrites the URL after removing the language prefix.</summary>
+        /// <param name="context">The context.</param>
+        public static void RewriteUrl(this HttpContextBase context)
+        {
+            Assert.ArgumentNotNull((object)context, nameof(context));
+
+            HttpRequestBase request = context.Request;
+            string filePath = request.FilePath;
+
+            filePath = filePath.TrimEnd('/').RemoveEnd("/amp");
+
+            context.RewritePath(filePath);
+            //context.Response.Redirect(urlString.ToString(), true);
         }
     }
 }

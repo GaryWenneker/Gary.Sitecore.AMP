@@ -1,0 +1,18 @@
+﻿---
+ID: "cf01dffd-1b95-4658-936a-3e89d9c3d3bb"
+Parent: "23782417-dd24-412d-a203-3013390e8390"
+Template: "e269fbb5-3750-427a-9149-7aa950b49301"
+Path: /sitecore/templates/Projects/AMP/Blog Page/Blog
+DB: master
+Languages:
+- Language: en
+  Versions:
+  - Version: 1
+    Fields:
+    - ID: "25bed78c-4957-4165-998a-ca1b52f67497"
+      Hint: __Created
+      Value: 20180227T101006Z
+    - ID: "5dd74568-4d4b-44c1-b513-0af5f4cda34f"
+      Hint: __Created by
+      Value: |
+        sitecore\admin

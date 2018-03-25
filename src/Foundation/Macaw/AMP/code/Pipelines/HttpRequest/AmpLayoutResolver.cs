@@ -1,8 +1,12 @@
 ﻿using Foundation.Macaw.AMP.Extensions;
 using Sitecore;
+using Sitecore.Data;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
 using Sitecore.Pipelines.HttpRequest;
+using System;
+using System.Linq;
+using System.Web;
 
 namespace Foundation.Macaw.AMP.Pipelines.HttpRequest
 {
@@ -16,24 +20,28 @@ namespace Foundation.Macaw.AMP.Pipelines.HttpRequest
         {
 
             Assert.ArgumentNotNull(args, "args");
-            //if (Context.Item != null && Context.Database != null && Context.HttpContext.Session["__UseAMP"] != null)
-            //{
-            //    if (bool.Parse(Context.HttpContext.Session["__UseAMP"].ToString()) == true)
-            //    {
-            //        Item layoutItem = GetReferenceLayoutItem();
-            //        if (layoutItem != null && layoutItem.Visualization.Layout != null)
-            //        {
-            //            Context.Page.FilePath = layoutItem.Visualization.Layout.FilePath;
-            //        }
-            //    }
-            //}
 
-            Item layoutItem = ExtensionMethods.GetReferenceLayoutItem();
-            if (layoutItem != null && layoutItem.Visualization.Layout != null)
+
+            // Get the default device
+            HttpRequestBase request = args.HttpContext.Request;
+            if (ExtensionMethods.GetAmpCookie(request))
             {
-                Context.Page.FilePath = "/Views/Amp.cshtml"; // layoutItem.Visualization.Layout.FilePath;
+                SetAmp();
             }
+        }
 
+        
+        private void SetAmp()
+        {
+            DeviceRecords devices = Sitecore.Context.Item?.Database.Resources.Devices;
+            if (devices != null)
+            {
+                DeviceItem defaultDevice = devices?.GetAll()?.Where(d => d.Name.ToLower() == "amp").FirstOrDefault();
+                if (defaultDevice != null)
+                {
+                    Sitecore.Context.Device = defaultDevice;
+                }
+            }
         }
     }
 }
